@@ -1,4 +1,5 @@
 import pymongo
+from pymongo import MongoClient, CursorType
 from datetime import datetime
 import time
 
@@ -25,7 +26,8 @@ class JobQueue:
         try:
             self.db.create_collection('jobqueue',
                                       capped=capped, max=100000,
-                                      size=100000, autoIndexId=True)
+                                      size=10 * 1024 * 1024,
+                                      autoIndexId=True)
         except:
             raise Exception('Collection "jobqueue" already created')
 
@@ -43,10 +45,10 @@ class JobQueue:
     def next(self):
         """ Runs the next job in the queue. """
         cursor = self.q.find({'status': 'waiting'},
-                             tailable=True)
+                             cursor_type=CursorType.TAILABLE_AWAIT)
         if cursor:
             row = cursor.next()
-            row['status'] = 'done'
+            row['status'] = 'done...'
             row['ts']['started'] = datetime.now()
             row['ts']['done'] = datetime.now()
             self.q.save(row)
@@ -72,7 +74,8 @@ class JobQueue:
     def __iter__(self):
         """ Iterates through all docs in the queue
             andw aits for new jobs when queue is empty. """
-        cursor = self.q.find({'status': 'waiting'}, tailable=True)
+        cursor = self.q.find({'status': 'waiting'},
+                             cursor_type=CursorType.TAILABLE_AWAIT)
         while 1:
             try:
                 row = cursor.next()
@@ -90,7 +93,7 @@ class JobQueue:
                 print ('---')
                 print ('Working on job:')
                 yield row
-                row['status'] = 'done'
+                row['status'] = 'done...'
                 row['ts']['done'] = datetime.now()
                 self.q.save(row)
             except:
