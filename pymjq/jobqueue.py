@@ -44,14 +44,12 @@ class JobQueue:
 
     def next(self):
         """ Runs the next job in the queue. """
-        cursor = self.q.find({'status': 'waiting'},
-                             cursor_type=CursorType.TAILABLE_AWAIT)
-        if cursor:
-            row = cursor.next()
-            row['status'] = 'done...'
-            row['ts']['started'] = datetime.now()
-            row['ts']['done'] = datetime.now()
-            self.q.save(row)
+        row = self.q.f.find_one_and_update({'status': 'waiting'},
+                                           {'$set':
+                                            {'status': 'done...',
+                                             'ts.started': datetime.now(),
+                                             'ts.done': datetime.now()}})
+        if row:
             try:
                 return row
             except:
@@ -74,32 +72,23 @@ class JobQueue:
     def __iter__(self):
         """ Iterates through all docs in the queue
             andw aits for new jobs when queue is empty. """
-        cursor = self.q.find({'status': 'waiting'},
-                             cursor_type=CursorType.TAILABLE_AWAIT)
         while 1:
             try:
-                row = cursor.next()
-                try:
-                    result = self.q.update({'_id': row['_id'],
-                                            'status': 'waiting'},
-                                           {'$set': {
-                                                'status': 'working',
-                                                'ts.started': datetime.now()
-                                                }
-                                            })
-                except OperationFailure:
-                    print ('Job Failed!!')
-                    continue
-                print ('---')
-                print ('Working on job:')
+                row = self.q.find_one_and_update(
+                    {'status': 'waiting'},
+                    {'$set':
+                     {'status': 'working',
+                      'ts.started': datetime.now()}})
+                print('---')
+                print('Working on job:')
                 yield row
-                row['status'] = 'done...'
-                row['ts']['done'] = datetime.now()
-                self.q.save(row)
+                self.q.update_one({'_id': row['_id']},
+                                  {'$set': {'status': 'done...',
+                                            'ts.done': datetime.utcnow()}})
             except:
                 time.sleep(5)
                 if not self.silent:
-                    print ('waiting!')
+                    print('waiting!')
 
     def queue_count(self):
         """ Returns the number of jobs waiting in the queue. """

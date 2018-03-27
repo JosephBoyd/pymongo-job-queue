@@ -11,7 +11,7 @@ from os import path
 setup(
   name = 'pymjq',
   packages = ['pymjq'], # this must be the same as the name above
-  version = '1.2.0',
+  version = '1.2.1',
   description = 'Simple MongoDB based job queue',
   # long_description=long_description,
   license = 'MIT',
