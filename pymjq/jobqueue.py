@@ -79,12 +79,15 @@ class JobQueue:
                     {'$set':
                      {'status': 'working',
                       'ts.started': datetime.now()}})
-                print('---')
-                print('Working on job:')
-                yield row
-                self.q.update_one({'_id': row['_id']},
-                                  {'$set': {'status': 'done...',
-                                            'ts.done': datetime.utcnow()}})
+                if row:
+                    print('---')
+                    print('Working on job:')
+                    yield row
+                    self.q.update_one({'_id': row['_id']},
+                                      {'$set': {'status': 'done...',
+                                                'ts.done': datetime.utcnow()}})
+                else:
+                    raise ValueError('queue empty')
             except:
                 time.sleep(5)
                 if not self.silent:
