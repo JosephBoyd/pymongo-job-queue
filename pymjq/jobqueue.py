@@ -6,26 +6,27 @@ import time
 
 class JobQueue:
 
-    def __init__(self, db, silent=False):
+    def __init__(self, db, name='jobqueue', silent=False):
         """ Return an instance of a JobQueue.
         Initialization requires one argument, the database,
         since we use one jobqueue collection to cover all
-        sites in an installation/database. The second 
+        sites in an installation/database. The second
         argument specifies if to print status while waiting
         for new job, the default value is False"""
         self.db = db
-        self.silent=silent
+        self.name = name
+        self.silent = silent
         if not self._exists():
-            print ('Creating jobqueue collection.')
+            print('Creating jobqueue collection.')
             self._create()
-        self.q = self.db['jobqueue']
+        self.q = self.db[name]
 
     def _create(self, capped=True):
         """ Creates a Capped Collection. """
-        # TODO - does the size parameter mean number of docs or bytesize?
+        # size parameter bytesize
         try:
-            self.db.create_collection('jobqueue',
-                                      capped=capped, max=100000,
+            self.db.create_collection(self.name,
+                                      capped=capped, max=100000000,
                                       size=10 * 1024 * 1024,
                                       autoIndexId=True)
         except:
@@ -37,7 +38,7 @@ class JobQueue:
 
     def valid(self):
         """ Checks to see if the jobqueue is a capped collection. """
-        opts = self.db['jobqueue'].options()
+        opts = self.db[self.name].options()
         if opts.get('capped', False):
             return True
         return False
@@ -71,7 +72,7 @@ class JobQueue:
 
     def __iter__(self):
         """ Iterates through all docs in the queue
-            andw aits for new jobs when queue is empty. """
+            and waits for new jobs when queue is empty. """
         while 1:
             try:
                 row = self.q.find_one_and_update(
@@ -87,7 +88,7 @@ class JobQueue:
                                       {'$set': {'status': 'done...',
                                                 'ts.done': datetime.utcnow()}})
                 else:
-                    raise ValueError('queue empty')
+                    raise Exception('queue empty')
             except:
                 time.sleep(5)
                 if not self.silent:
