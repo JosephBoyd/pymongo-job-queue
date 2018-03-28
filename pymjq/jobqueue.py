@@ -34,7 +34,7 @@ class JobQueue:
 
     def _exists(self):
         """ Ensures that the jobqueue collection exists in the DB. """
-        return 'jobqueue' in self.db.collection_names()
+        return self.name in self.db.collection_names()
 
     def valid(self):
         """ Checks to see if the jobqueue is a capped collection. """
