@@ -27,7 +27,7 @@ class JobQueue:
         try:
             self.db.create_collection(self.name,
                                       capped=capped, max=100000000,
-                                      size=10 * 1024 * 1024,
+                                      size=300 * 1024 * 100000000,
                                       autoIndexId=True)
         except:
             raise Exception('Collection "jobqueue" already created')
