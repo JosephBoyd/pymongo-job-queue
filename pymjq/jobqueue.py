@@ -56,6 +56,7 @@ class JobQueue:
             except:
                 raise Exception('There are no jobs in the queue')
 
+            
     def pub(self, data=None):
         """ Publishes a doc to the work queue. """
         doc = dict(
@@ -70,6 +71,23 @@ class JobQueue:
             raise Exception('could not add to queue')
         return True
 
+    
+    def upub(self, data=None):
+        """ Publishes a doc to the work queue. """
+        doc = dict(
+            ts={'created': datetime.now(),
+                'started': datetime.now(),
+                'done': datetime.now()},
+            status='waiting',
+            data=data)
+        try:
+            self.q.find_one_and_replace({'status': 'waiting', 'data': data},
+                                        doc, upsert=True, manipulate=False)
+        except:
+            raise Exception('could not add to queue')
+        return True
+
+    
     def __iter__(self):
         """ Iterates through all docs in the queue
             and waits for new jobs when queue is empty. """
