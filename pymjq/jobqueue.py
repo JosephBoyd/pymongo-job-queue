@@ -1,5 +1,5 @@
 import pymongo
-from pymongo import MongoClient, CursorType
+from pymongo import MongoClient, CursorType, IndexModel
 from datetime import datetime
 import time
 
@@ -29,6 +29,12 @@ class JobQueue:
                                       capped=capped, max=100000000,
                                       size=300 * 1024 * 100000000,
                                       autoIndexId=True)
+            self.db[self.name].create_indexes([IndexModel([('status', pymongo.ASCENDING)]),
+                                               IndexModel([('data', pymongo.ASCENDING)]),
+                                               IndexModel([('ts.created', pymongo.ASCENDING)]),
+                                               IndexModel([('ts.started', pymongo.ASCENDING)]),
+                                               IndexModel([('ts.done', pymongo.ASCENDING)])])
+                
         except:
             raise Exception('Collection "jobqueue" already created')
 
