@@ -1,5 +1,6 @@
 import pymongo
 from pymongo import MongoClient, CursorType, IndexModel
+from pymongo.write_concern import WriteConcern
 from datetime import datetime
 import time
 
@@ -88,7 +89,8 @@ class JobQueue:
             data=data)
         try:
             self.q.update_one({'status': 'waiting', 'data': data},
-                              {'$set': doc}, upsert=True)
+                              {'$set': doc}, upsert=True,
+                              w=0)
         except:
             raise Exception('could not add to queue')
         return True
