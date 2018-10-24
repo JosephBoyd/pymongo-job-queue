@@ -90,7 +90,7 @@ class JobQueue:
         try:
             self.q.update_one({'status': 'waiting', 'data': data},
                               {'$set': doc}, upsert=True,
-                              w=0)
+                              write_concern=WriteConcern(w=0))
         except:
             raise Exception('could not add to queue')
         return True
