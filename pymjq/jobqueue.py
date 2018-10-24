@@ -87,8 +87,8 @@ class JobQueue:
             status='waiting',
             data=data)
         try:
-            self.q.find_one_and_replace({'status': 'waiting', 'data': data},
-                                        doc, upsert=True, manipulate=False)
+            self.q.update_one({'status': 'waiting', 'data': data},
+                              doc, upsert=True)
         except:
             raise Exception('could not add to queue')
         return True
