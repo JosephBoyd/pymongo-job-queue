@@ -27,8 +27,8 @@ class JobQueue:
         # size parameter bytesize
         try:
             self.db.create_collection(self.name,
-                                      capped=capped, max=100000000,
-                                      size=300 * 1024 * 100000000,
+                                      capped=capped, max=2000000,
+                                      size=300 * 1024 * 2000000,
                                       autoIndexId=True)
             self.db[self.name].create_indexes([IndexModel([('status', pymongo.ASCENDING)]),
                                                IndexModel([('data', pymongo.ASCENDING)]),
